@@ -1,49 +1,43 @@
 import { Hono } from 'hono';
 import type { Serve } from 'bun';
 import { createBunWebSocket } from 'hono/bun';
-import { zValidator } from '@hono/zod-validator';
 
-import { type Body, body } from './schema';
-import { Home, NewPopup, Entries } from './components';
+import type { Config } from './config';
+import { Controller } from './controller';
+import { Home, Pods } from './components';
 
-export const factory = (port: number): Serve<any> => {
-  const entries: Body[] = [];
+export const getApp = (config: Config): Serve<any> => {
+  const controller = new Controller(config);
 
   const { upgradeWebSocket, websocket } = createBunWebSocket();
+
   const app = new Hono();
 
   app.get('/', async (c) => c.html(Home));
-  app.get('/ok', async (c) => c.text('OK'));
-
-  app.get('/new', async (c) => c.html(NewPopup));
-  app.post('/new', zValidator('form', body), async (c) => {
-    entries.push(c.req.valid('form'));
-    return c.text('OK');
-  });
 
   app.get(
     '/ws',
     upgradeWebSocket((c) => {
-      let intervalId: Timer;
+      let timeoutId: Timer;
       return {
-        onOpen(_event, ws) {
-          intervalId = setInterval(() => {
-            ws.send(Entries(entries).toString());
-          }, 500);
-        },
-        onMessage(event, ws) {
-          console.log(event.data);
+        onOpen(_, ws) {
+          const run = async () => {
+            const pods = await controller.getPods();
+            ws.send(Pods(pods).toString());
+            timeoutId = setTimeout(run, 5000);
+          };
+          run();
         },
         onClose() {
-          clearInterval(intervalId);
+          clearTimeout(timeoutId);
         },
       };
     }),
   );
 
   return {
+    port: config.port,
     fetch: app.fetch,
-    port: 3333,
     websocket,
   };
 };

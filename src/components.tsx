@@ -1,4 +1,4 @@
-import { type Body } from './schema';
+import type { Pod } from './types';
 
 const page = (title: string, Child: JSX.Element) => (
   <html>
@@ -7,11 +7,7 @@ const page = (title: string, Child: JSX.Element) => (
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <script src="https://cdn.tailwindcss.com"></script>
-      <script
-        src="https://unpkg.com/htmx.org@1.9.6"
-        integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni"
-        crossorigin="anonymous"
-      ></script>
+      <script src="https://unpkg.com/htmx.org@1.9.6" crossorigin="anonymous"></script>
       <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
     </head>
     <body id="body" class="bg-slate-900 text-white">
@@ -22,91 +18,99 @@ const page = (title: string, Child: JSX.Element) => (
 
 export const Home = page(
   'Home',
-  <div hx-ext="ws" ws-connect="/ws" hx-target="entries">
-    <div id="entries"></div>
-    <div
-      hx-get="/new"
-      hx-target="#body"
-      hx-swap="beforeend"
-      class="absolute text-white text-center right-2 bottom-2 px-4 py-2 bg-blue-600 hover:bg-sky-100 hover:text-sky-900 border border-slate-600 rounded shadow-md cursor-pointer"
-    >
-      New
-    </div>
+  <div hx-ext="ws" ws-connect="/ws" hx-target="pods">
+    <div id="pods"></div>
   </div>,
 );
 
-export const NewPopup = (
-  <div
-    id="modal"
-    hx-get="/ok"
-    hx-target="#modal"
-    hx-swap="delete"
-    hx-trigger="click target:#modal"
-    class="flex overflow-y-auto overflow-x-hidden fixed inset-0 z-50 justify-center items-center w-full md:inset-0 max-h-full backdrop-blur-sm"
-  >
-    <div id="modal-content" class="relative p-4 w-full max-w-md max-h-full">
-      <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Add Entries</h3>
-          <button
-            hx-get="/ok"
-            hx-target="#modal"
-            hx-swap="delete"
-            type="button"
-            class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-          >
-            <svg
-              class="w-3 h-3"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 14 14"
+export const Pods = (pods: Pod[]) => (
+  <div id="pods" class="relative overflow-x-auto">
+    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          <th scope="col" class="px-6 py-3">
+            Name
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Created
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Status
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Resources
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Labels
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {pods.map((pod) => (
+          <tr class="bg-white border-t dark:bg-gray-800 dark:border-gray-700">
+            <th
+              scope="row"
+              class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
             >
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-              />
-            </svg>
-            <span class="sr-only">Close</span>
-          </button>
-        </div>
-        <div class="p-4 md:p-5">
-          <form class="space-y-4" hx-post="/new" hx-target="#modal" hx-swap="delete">
-            <div>
-              <label
-                for="description"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Descriotion
-              </label>
-              <input
-                name="description"
-                id="description"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                required
-              ></input>
-            </div>
-            <button
-              type="submit"
-              class="w-full text-white text-center px-4 py-2 bg-blue-600 hover:bg-sky-100 hover:text-sky-900 border border-slate-600 rounded overflow-hidden shadow-md"
-            >
-              Add
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
+              {pod.name}
+            </th>
+            <td class="px-6 py-4">{pod.createdAt}</td>
+            <td class="px-6 py-4">
+              {pod.status}({pod.restarts})
+            </td>
+            <td class="px-6 py-4">
+              <span class="bg-purple-100 text-purple-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300">
+                CPU:{pod.cpu}
+              </span>
+              <span class="bg-pink-100 text-pink-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-pink-900 dark:text-pink-300">
+                Mem:{pod.memory}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center space-x-2">
+                {Object.entries(pod.labels).map(([key, value]) => (
+                  <span class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                    {key}:{value}
+                  </span>
+                ))}
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   </div>
 );
 
-export const Entries = (entries: Body[]) => (
-  <div id="entries">
-    {entries.map((entry) => (
+export const APods = (pods: Pod[]) => (
+  <div id="pods">
+    {pods.map((pod) => (
       <div class="p-4 border-b border-gray-200 dark:border-gray-600">
-        <p class="text-lg font-semibold text-gray-900 dark:text-white">{entry.description}</p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <span class="text-xl font-semibold">{pod.status}</span>
+            <span class="text-sm text-gray-400 dark:text-gray-500">{pod.createdAt}</span>
+
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-gray-400 dark:text-gray-500">CPU:</span>
+              <span class="text-sm text-gray-400 dark:text-gray-500">{pod.cpu}</span>
+
+              <span class="text-sm text-gray-400 dark:text-gray-500">Memory:</span>
+              <span class="text-sm text-gray-400 dark:text-gray-500">{pod.memory}</span>
+
+              <span class="text-sm text-gray-400 dark:text-gray-500">Restarts:</span>
+              <span class="text-sm text-gray-400 dark:text-gray-500">{pod.restarts}</span>
+
+              <div class="flex items-center space-x-2">
+                {Object.entries(pod.labels).map(([key, value]) => (
+                  <span class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                    {key}:{value}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     ))}
   </div>
