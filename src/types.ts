@@ -2,8 +2,8 @@ export type Pod = {
   name: string;
   status: string;
   restarts: number;
-  createdAt: string;
-  cpu: string;
-  memory: string;
+  createdAt?: Date;
+  cpu: number;
+  memory: number;
   labels: Record<string, string>;
 };

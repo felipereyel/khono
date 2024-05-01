@@ -23,6 +23,24 @@ export const Home = page(
   </div>,
 );
 
+const Running = (restarts: number) => (
+  <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-green-400 border border-green-400">
+    Running ({restarts})
+  </span>
+);
+
+const Terminating = (restarts: number) => (
+  <span class="bg-pink-100 text-pink-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-pink-400 border border-pink-400">
+    Terminating ({restarts})
+  </span>
+);
+
+const Other = (restarts: number, status: string) => (
+  <span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-red-400 border border-red-400">
+    {status} ({restarts})
+  </span>
+);
+
 export const Pods = (pods: Pod[]) => (
   <div id="pods" class="relative overflow-x-auto">
     <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -52,25 +70,29 @@ export const Pods = (pods: Pod[]) => (
               scope="row"
               class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
             >
-              {pod.name}
+              {pod.name.slice(0, 20)}
             </th>
-            <td class="px-6 py-4">{pod.createdAt}</td>
+            <td class="px-6 py-4">{pod.createdAt?.toISOString().slice(0, 19)}</td>
             <td class="px-6 py-4">
-              {pod.status}({pod.restarts})
+              {pod.status === 'Running'
+                ? Running(pod.restarts)
+                : pod.status === 'Terminating'
+                ? Terminating(pod.restarts)
+                : Other(pod.restarts, pod.status)}
             </td>
             <td class="px-6 py-4">
-              <span class="bg-purple-100 text-purple-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300">
-                CPU:{pod.cpu}
+              <span class="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-indigo-400 border border-indigo-400">
+                CPU: {(pod.cpu / 1000).toFixed(2)}m
               </span>
-              <span class="bg-pink-100 text-pink-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-pink-900 dark:text-pink-300">
-                Mem:{pod.memory}
+              <span class="bg-purple-100 text-purple-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-purple-400 border border-purple-400">
+                Mem: {(pod.memory / 1024).toFixed(2)}Mi
               </span>
             </td>
             <td class="px-6 py-4">
               <div class="flex items-center space-x-2">
                 {Object.entries(pod.labels).map(([key, value]) => (
-                  <span class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                    {key}:{value}
+                  <span class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-blue-400 border border-blue-400">
+                    {key}:{value.slice(0, 6)}
                   </span>
                 ))}
               </div>
@@ -79,39 +101,5 @@ export const Pods = (pods: Pod[]) => (
         ))}
       </tbody>
     </table>
-  </div>
-);
-
-export const APods = (pods: Pod[]) => (
-  <div id="pods">
-    {pods.map((pod) => (
-      <div class="p-4 border-b border-gray-200 dark:border-gray-600">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <span class="text-xl font-semibold">{pod.status}</span>
-            <span class="text-sm text-gray-400 dark:text-gray-500">{pod.createdAt}</span>
-
-            <div class="flex items-center space-x-2">
-              <span class="text-sm text-gray-400 dark:text-gray-500">CPU:</span>
-              <span class="text-sm text-gray-400 dark:text-gray-500">{pod.cpu}</span>
-
-              <span class="text-sm text-gray-400 dark:text-gray-500">Memory:</span>
-              <span class="text-sm text-gray-400 dark:text-gray-500">{pod.memory}</span>
-
-              <span class="text-sm text-gray-400 dark:text-gray-500">Restarts:</span>
-              <span class="text-sm text-gray-400 dark:text-gray-500">{pod.restarts}</span>
-
-              <div class="flex items-center space-x-2">
-                {Object.entries(pod.labels).map(([key, value]) => (
-                  <span class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                    {key}:{value}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    ))}
   </div>
 );
