@@ -13,7 +13,11 @@ export const getApp = (config: Config): Serve<any> => {
 
   const app = new Hono();
 
-  app.get('/', async (c) => c.html(Home));
+  app.get('/', async (c) => {
+    const viewType = c.req.query('table') != undefined ? 'table' : 'grid';
+
+    return c.html(Home(viewType));
+  });
 
   app.get(
     '/ws',
@@ -21,11 +25,14 @@ export const getApp = (config: Config): Serve<any> => {
       let timeoutId: Timer;
       return {
         onOpen(_, ws) {
+          const viewType = c.req.query('view') === 'table' ? 'table' : 'grid';
+
           const run = async () => {
             const pods = await controller.getPods();
-            ws.send(Pods(pods).toString());
-            timeoutId = setTimeout(run, 5000);
+            ws.send(Pods(pods, viewType).toString());
+            timeoutId = setTimeout(run, 10000);
           };
+
           run();
         },
         onClose() {

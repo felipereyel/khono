@@ -7,3 +7,5 @@ export type Pod = {
   memory: number;
   labels: Record<string, string>;
 };
+
+export type View = 'table' | 'grid';
