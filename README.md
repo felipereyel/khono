@@ -1,13 +1,9 @@
 # khono
 
-To install dependencies:
+Watch your pods status
 
-```bash
-bun install
-```
+![screenshot](screenshots/table.png)
 
-To run:
+## Requirements
 
-```bash
-bun run dev
-```
+- access to kubeconfig (locally)
